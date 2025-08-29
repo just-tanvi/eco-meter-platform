@@ -69,8 +69,8 @@ export default function HomePage() {
 
           <div className="rounded-lg border border-gray-200 p-4">
             <img
-              src="/illustrated-recycling-bin-with-a-clean-city-backgr.png"
-              alt="Illustration of a recycling bin with a clean city background"
+              src="/cool-toned-illustration-of-a-recycling-bin-with-a-.png"
+              alt="Cool-toned illustration of a recycling bin with a clean city background"
               className="h-auto w-full rounded"
             />
             <div className="mt-4 grid grid-cols-3 gap-3">
