@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-4 py-12 md:grid-cols-2 md:py-20">
           <div className="space-y-6">
             <h1 className="text-balance font-sans text-4xl font-bold text-slate-900 md:text-5xl">ECO METER</h1>
-            <p className="text-balance font-sans text-lg text-slate-700">Where change counts.</p>
+            <p className="text-balance text-lg text-slate-700 font-mono">Where change counts.</p>
             <p className="font-sans leading-relaxed text-slate-700">
               Join a community that turns recyclable materials into measurable impact. Schedule pickups or drop-offs,
               track your contributions, earn recognition, and climb global and friends leaderboards.
@@ -44,7 +44,7 @@ export default function HomePage() {
                 href="/leaderboard"
                 className="inline-flex items-center justify-center rounded border border-teal-600 px-5 py-3 font-sans text-sm font-semibold text-teal-700 hover:bg-teal-50"
               >
-                View leaderboard
+                View leaderboards
               </Link>
             </div>
             <ul className="grid gap-3 pt-4 text-sm text-slate-700 md:grid-cols-2">
@@ -69,8 +69,8 @@ export default function HomePage() {
 
           <div className="rounded-lg border border-gray-200 p-4">
             <img
-              src="/illustration-of-recycling-community-pickup-and-lea.png"
-              alt="Illustration of community recycling with pickups and leaderboard"
+              src="/illustrated-recycling-bin-clean-city-cool-toned.png"
+              alt="Cool-toned illustration of a recycling bin with a clean city background"
               className="h-auto w-full rounded"
             />
             <div className="mt-4 grid grid-cols-3 gap-3">

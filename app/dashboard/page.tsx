@@ -1,21 +1,13 @@
 // app/dashboard/page.tsx
 // User dashboard: summary, quick schedule, friends leaderboard
 
-import { redirect } from "next/navigation"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
 import Navbar from "@/components/navbar"
 import ScheduleForm from "@/components/schedule-form"
 import { ContributionsWidget } from "@/components/dashboard/contributions-widget"
 import Leaderboard from "@/components/leaderboard"
 import FriendsManager from "@/components/friends-manager"
 
-export default async function DashboardPage() {
-  const supabase = getSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/sign-in")
-
+export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />

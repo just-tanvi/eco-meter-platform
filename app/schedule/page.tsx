@@ -1,17 +1,9 @@
 // app/schedule/page.tsx
 
-import { redirect } from "next/navigation"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
 import Navbar from "@/components/navbar"
 import ScheduleForm from "@/components/schedule-form"
 
-export default async function SchedulePage() {
-  const supabase = getSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/sign-in")
-
+export default function SchedulePage() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />

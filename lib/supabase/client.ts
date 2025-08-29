@@ -3,28 +3,16 @@
 
 "use client"
 
-import { createBrowserClient } from "@supabase/ssr"
-
-let _browserClient: ReturnType<typeof createBrowserClient> | null = null
+/**
+ * Supabase removed. These helpers now return null or throw with a clear message.
+ * This avoids importing @supabase/ssr in the browser.
+ */
 
 export function getSupabaseBrowserClient() {
-  if (_browserClient) return _browserClient
-
-  _browserClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
-
-  return _browserClient
+  throw new Error("Supabase has been removed from this project. No browser client is available.")
 }
 
-// Safe variant that returns null if envs are missing
 export function getSupabaseBrowserClientSafe() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-
-  if (_browserClient) return _browserClient
-  _browserClient = createBrowserClient(url, key)
-  return _browserClient
+  // Always return null; call sites should handle the unauthenticated/public state.
+  return null
 }
