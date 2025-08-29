@@ -69,7 +69,7 @@ export default function HomePage() {
 
           <div className="rounded-lg border border-gray-200 p-4">
             <img
-              src="/cool-toned-illustration-of-a-recycling-bin-with-a-.png"
+              src="/illustrated-recycling-bin-clean-city-cool-toned.png"
               alt="Cool-toned illustration of a recycling bin with a clean city background"
               className="h-auto w-full rounded"
             />
