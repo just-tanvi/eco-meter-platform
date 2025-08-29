@@ -9,7 +9,7 @@ let _serverClient: ReturnType<typeof createServerClient> | null = null
 export function getSupabaseServerClientSafe() {
   // Prefer non-public on server; fall back to NEXT_PUBLIC if provided
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_ANON_KEY
+  const key = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
     // Return null if envs are not present to avoid throwing during render
@@ -56,7 +56,9 @@ export function getSupabaseServerClient() {
       !process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL
         ? "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL"
         : null,
-      !process.env.SUPABASE_ANON_KEY ? "SUPABASE_ANON_KEY" : null,
+      !process.env.SUPABASE_ANON_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? "SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY"
+        : null,
     ]
       .filter(Boolean)
       .join(", ")
