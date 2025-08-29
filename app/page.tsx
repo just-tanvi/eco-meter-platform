@@ -44,7 +44,7 @@ export default function HomePage() {
                 href="/leaderboard"
                 className="inline-flex items-center justify-center rounded border border-teal-600 px-5 py-3 font-sans text-sm font-semibold text-teal-700 hover:bg-teal-50"
               >
-                View leaderboard
+                View leaderboards
               </Link>
             </div>
             <ul className="grid gap-3 pt-4 text-sm text-slate-700 md:grid-cols-2">

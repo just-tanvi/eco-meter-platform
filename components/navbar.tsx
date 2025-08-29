@@ -52,7 +52,7 @@ export default function Navbar() {
             Schedule
           </Link>
           <Link href="/leaderboard" className="text-sm text-slate-700 hover:text-slate-900">
-            Leaderboard
+            Leaderboards
           </Link>
           <Link href="/rewards" className="text-sm text-slate-700 hover:text-slate-900">
             Rewards
