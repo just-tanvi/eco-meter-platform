@@ -1,30 +1,35 @@
-# Eco Meter platform
+**ECO METER**
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+*where change matters.*
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/tanvi-tiwaris-projects-bf7968a7/v0-eco-meter-platform)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/eFGxb6ehBqq)
+ A community that turns recyclable materials into measurable impact. Schedule pickups or drop-offs, 
+ track your contributions, earn recognition, and climb global and friends leaderboards.
 
-## Overview
+This project was build to support and sustain the practice of recycling in our communities and do it in a way which excites users.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+Our aim with this project is to make recycling easy and convenient for our users and to provide a systematic working environment for those who work in recycling facilities.  
 
-## Deployment
+*FEAUTURES:*
 
-Your project is live at:
+  - Schedules pickups or drop-offs.
+  - Tracks all the contributions made by the user and gives rewards accordingly.
+  - Maintains worldwide leaderboards.
+  - Allows users to add friends and make personal leader boards.
 
-**[https://vercel.com/tanvi-tiwaris-projects-bf7968a7/v0-eco-meter-platform](https://vercel.com/tanvi-tiwaris-projects-bf7968a7/v0-eco-meter-platform)**
+*TECH STACK:*
+  - Framework: Next.js (App Router) with TypeScript.
+  - UI: React, Tailwind CSS v4, shadcn/ui (Radix UI).
+  - Data/State: Server Actions & Route Handlers, SWR.
+  - Charts: Recharts.
+  - Database/Auth: Supabase (Postgres) using @supabase/ssr.
 
-## Build your app
+*TEAM MEMBERS*
 
-Continue building your app on:
+- Tanvi Tiwari – Frontend, UI/UX.  
+- Ishita Gupta – UI/UX.
+- Awika Raj Panjiyara - Representaion.
 
-**[https://v0.app/chat/projects/eFGxb6ehBqq](https://v0.app/chat/projects/eFGxb6ehBqq)**
+*FUTURE IMPROVEMENTS:*
 
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+   - An AI-powered scanner that identifies whether an item is recyclable or not.
+   - Larger data bases using SQL.
