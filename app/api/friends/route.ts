@@ -2,52 +2,68 @@
 // GET my friends; POST add friend by username
 
 import { NextResponse } from "next/server"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+
+// Force dynamic so this route isn't statically cached during build
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+type Friend = {
+  friend_id: string
+  friend_username: string | null
+  friend_email: string | null
+}
+
+// Simple in-memory store for friends (mock). Resets on cold start.
+const mockFriends: Friend[] = [
+  { friend_id: "friend-1", friend_username: "green_ally", friend_email: "green_ally@example.com" },
+  { friend_id: "friend-2", friend_username: "recycle_hero", friend_email: "recycle_hero@example.com" },
+]
 
 export async function GET() {
-  const supabase = getSupabaseServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  const { data, error } = await supabase
-    .from("friends")
-    .select("friend_id, friend_username, friend_email")
-    .eq("user_id", auth.user.id)
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ friends: data ?? [] })
+  return NextResponse.json({ friends: mockFriends })
 }
 
 export async function POST(req: Request) {
-  const supabase = getSupabaseServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  let username: string | undefined
 
-  const { username } = await req.json()
-  if (!username) return NextResponse.json({ error: "Username required" }, { status: 400 })
-
-  // find profile by username
-  const { data: profile, error: pErr } = await supabase
-    .from("profiles")
-    .select("id, username, email")
-    .ilike("username", username)
-    .maybeSingle()
-
-  if (pErr || !profile) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 })
+  const contentType = req.headers.get("content-type") || ""
+  try {
+    if (contentType.includes("application/json")) {
+      const body = await req.json().catch(() => ({}))
+      username = typeof body?.username === "string" ? body.username.trim() : undefined
+    } else if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+      const body = await req.formData()
+      const raw = body.get("username")
+      if (typeof raw === "string") username = raw.trim()
+    } else {
+      // Try JSON as a fallback
+      const body = await req.json().catch(() => ({}))
+      username = typeof body?.username === "string" ? body.username.trim() : undefined
+    }
+  } catch {
+    // ignore parse errors; we'll validate below
   }
-  if (profile.id === auth.user.id) {
-    return NextResponse.json({ error: "Cannot add yourself" }, { status: 400 })
+
+  if (!username) {
+    return NextResponse.json({ error: "Username required" }, { status: 400 })
   }
 
-  // upsert friendship (one-directional; you may add both directions in UI)
-  const { error } = await supabase.from("friends").insert({
-    user_id: auth.user.id,
-    friend_id: profile.id,
-    friend_username: profile.username,
-    friend_email: profile.email,
-  })
+  // Prevent obvious duplicates by username (case-insensitive)
+  const exists = mockFriends.some((f) => (f.friend_username || "").toLowerCase() === username!.toLowerCase())
+  if (exists) {
+    return NextResponse.json({ error: "Already added" }, { status: 409 })
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ ok: true })
+  // Create a new mock friend
+  const id = (globalThis.crypto?.randomUUID?.() ?? `friend-${Date.now()}-${Math.floor(Math.random() * 1000)}`)
+  const email = `${username.replace(/\s+/g, "_").toLowerCase()}@example.com`
+
+  const created: Friend = {
+    friend_id: id,
+    friend_username: username,
+    friend_email: email,
+  }
+  mockFriends.push(created)
+
+  return NextResponse.json({ ok: true, friend: created })
 }
