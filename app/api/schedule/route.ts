@@ -2,22 +2,39 @@ import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 
 type SchedulePayload = {
-  pickupAt: string // ISO datetime
+  pickupAt: string
   address: string
-  materials?: string[] // optional list of materials
-  notes?: string
+  materials?: string[] | string | null
+  notes?: string | null
+}
+
+function normalizeMaterials(input: SchedulePayload["materials"]): string[] {
+  if (!input) return []
+  if (Array.isArray(input)) {
+    return input
+      .flatMap((v) => (typeof v === "string" ? v.split(",") : []))
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }
+  if (typeof input === "string") {
+    return input
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }
+  return []
 }
 
 export async function POST(req: Request) {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Guard: if Supabase is not configured, don't throw, just respond 503
   if (!url || !anon) {
     return new Response(
       JSON.stringify({
-        error: "Supabase is not configured",
-        hint: "Missing SUPABASE_URL and/or SUPABASE_ANON_KEY. Add them in Project Settings > Environment Variables.",
+        error: "SERVICE_UNAVAILABLE",
+        message: "Supabase is not configured",
+        hint: "Add SUPABASE_URL and SUPABASE_ANON_KEY in Project Settings > Environment Variables.",
       }),
       { status: 503, headers: { "content-type": "application/json" } },
     )
@@ -30,7 +47,6 @@ export async function POST(req: Request) {
         return cookieStore.get(name)?.value
       },
       set(name: string, value: string, options: any) {
-        // set cookie via next/headers
         cookieStore.set({ name, value, ...options })
       },
       remove(name: string, options: any) {
@@ -39,50 +55,75 @@ export async function POST(req: Request) {
     },
   })
 
-  let body: SchedulePayload
+  // Try JSON; if it fails, fall back to FormData (supports application/x-www-form-urlencoded & multipart/form-data)
+  let raw: any = null
   try {
-    body = (await req.json()) as SchedulePayload
+    raw = await req.json()
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    })
+    try {
+      const form = await req.formData()
+      raw = {
+        pickupAt: form.get("pickupAt") || form.get("pickup_at") || "",
+        address: form.get("address") || "",
+        materials: form.getAll("materials")?.length ? form.getAll("materials") : form.get("materials") || "",
+        notes: form.get("notes") || "",
+      }
+    } catch {
+      return new Response(JSON.stringify({ error: "INVALID_PAYLOAD", message: "Body must be JSON or FormData." }), {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      })
+    }
   }
 
-  const { pickupAt, address, materials = [], notes } = body || {}
-  if (!pickupAt || !address) {
-    return new Response(JSON.stringify({ error: "pickupAt and address are required" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    })
+  const body = raw as SchedulePayload
+  const pickupAtRaw = (body?.pickupAt || "").toString().trim()
+  const address = (body?.address || "").toString().trim()
+  const materials = normalizeMaterials(body?.materials ?? [])
+  const notes = (body?.notes ?? "").toString().trim() || null
+
+  if (!pickupAtRaw || !address) {
+    return new Response(
+      JSON.stringify({
+        error: "VALIDATION_ERROR",
+        message: "pickupAt and address are required",
+      }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    )
   }
 
-  // Auth: require a logged-in user
+  const d = new Date(pickupAtRaw)
+  if (isNaN(d.getTime())) {
+    return new Response(
+      JSON.stringify({
+        error: "INVALID_DATETIME",
+        message: "pickupAt must be a valid date string (ISO preferred).",
+      }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    )
+  }
+  const pickup_at = d.toISOString()
+
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
-
-  if (userError) {
-    return new Response(JSON.stringify({ error: userError.message }), {
-      status: 401,
-      headers: { "content-type": "application/json" },
-    })
-  }
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "content-type": "application/json" },
-    })
+  if (userError || !user) {
+    return new Response(
+      JSON.stringify({
+        error: "UNAUTHENTICATED",
+        message: userError?.message || "You must be signed in to schedule a pickup.",
+      }),
+      { status: 401, headers: { "content-type": "application/json" } },
+    )
   }
 
-  // Insert scheduled pickup
   try {
     const { data, error } = await supabase
       .from("pickups")
       .insert({
         user_id: user.id,
-        pickup_at: pickupAt,
+        pickup_at,
         address,
         materials,
         notes,
@@ -92,7 +133,21 @@ export async function POST(req: Request) {
       .single()
 
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
+      const msg = error.message || "Database error"
+      const pgcode = (error as any).code
+      const errPayload: Record<string, any> = { error: "DB_ERROR", message: msg }
+      if (pgcode) errPayload.code = pgcode
+
+      // Common hints
+      if (/relation .*pickups.* does not exist/i.test(msg)) {
+        errPayload.hint = "Run scripts/002_create_pickups.sql to create the pickups table."
+        errPayload.tag = "TABLE_MISSING"
+      } else if (/new row violates row-level security policy/i.test(msg)) {
+        errPayload.hint = "Ensure RLS policies allow inserts for auth.uid() = user_id."
+        errPayload.tag = "RLS_BLOCKED"
+      }
+
+      return new Response(JSON.stringify(errPayload), {
         status: 500,
         headers: { "content-type": "application/json" },
       })
@@ -103,9 +158,12 @@ export async function POST(req: Request) {
       headers: { "content-type": "application/json" },
     })
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || "Unknown error" }), {
-      status: 500,
-      headers: { "content-type": "application/json" },
-    })
+    return new Response(
+      JSON.stringify({
+        error: "UNKNOWN_ERROR",
+        message: e?.message || "Unknown error",
+      }),
+      { status: 500, headers: { "content-type": "application/json" } },
+    )
   }
 }
