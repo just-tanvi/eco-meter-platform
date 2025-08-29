@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-4 py-12 md:grid-cols-2 md:py-20">
           <div className="space-y-6">
             <h1 className="text-balance font-sans text-4xl font-bold text-slate-900 md:text-5xl">ECO METER</h1>
-            <p className="text-balance font-sans text-lg text-slate-700">Where change counts.</p>
+            <p className="text-balance text-lg text-slate-700 font-mono">Where change counts.</p>
             <p className="font-sans leading-relaxed text-slate-700">
               Join a community that turns recyclable materials into measurable impact. Schedule pickups or drop-offs,
               track your contributions, earn recognition, and climb global and friends leaderboards.
