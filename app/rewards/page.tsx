@@ -1,24 +1,26 @@
 // app/rewards/page.tsx
 
+export const dynamic = "force-dynamic"
+
 import Navbar from "@/components/navbar"
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
 
 export default async function RewardsPage() {
-  const supabase = getSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Fetch total points to show status (server-side aggregation)
   let totalPoints = 0
   let totalKg = 0
-  if (user) {
-    const { data, error } = await supabase.from("contributions").select("points, weight_kg").eq("user_id", user.id)
 
-    if (!error && data) {
-      totalPoints = data.reduce((acc, r) => acc + (r.points ?? 0), 0)
-      totalKg = data.reduce((acc, r) => acc + (Number(r.weight_kg) || 0), 0)
+  try {
+    const h = headers()
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${h.get("x-forwarded-proto") || "https"}://${h.get("host")}`
+
+    const res = await fetch(`${baseUrl}/api/contributions`, { cache: "no-store" })
+    if (res.ok) {
+      const json = await res.json()
+      totalPoints = json?.summary?.total_points ?? 0
+      totalKg = json?.summary?.total_kg ?? 0
     }
+  } catch {
+    // ignore and keep defaults
   }
 
   const nextBadge =
