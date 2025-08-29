@@ -1,41 +1,13 @@
 // app/dashboard/page.tsx
 // User dashboard: summary, quick schedule, friends leaderboard
 
-import { redirect } from "next/navigation"
 import Navbar from "@/components/navbar"
 import ScheduleForm from "@/components/schedule-form"
 import { ContributionsWidget } from "@/components/dashboard/contributions-widget"
 import Leaderboard from "@/components/leaderboard"
 import FriendsManager from "@/components/friends-manager"
-import { getSupabaseServerClientSafe } from "@/lib/supabase/server"
 
-export default async function DashboardPage() {
-  const supabase = getSupabaseServerClientSafe()
-  if (!supabase) {
-    return (
-      <main className="min-h-screen bg-white">
-        <Navbar />
-        <div className="mx-auto max-w-2xl px-4 py-10">
-          <h1 className="text-balance font-sans text-2xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="mt-1 font-sans text-sm text-slate-700">Where change counts.</p>
-
-          <div className="mt-6 rounded-md border border-blue-200 bg-blue-50 p-4">
-            <h2 className="font-sans text-base font-semibold text-slate-900">Supabase not configured</h2>
-            <p className="mt-1 text-sm text-slate-800">
-              To enable authentication and data, add SUPABASE_URL and SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_URL and
-              NEXT_PUBLIC_SUPABASE_ANON_KEY) in Project Settings &gt; Environment Variables, then refresh this page.
-            </p>
-          </div>
-        </div>
-      </main>
-    )
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/sign-in")
-
+export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />

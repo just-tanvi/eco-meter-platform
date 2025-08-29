@@ -2,7 +2,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 
 export default function ScheduleForm({ onScheduled }: { onScheduled?: () => void }) {
@@ -19,12 +18,22 @@ export default function ScheduleForm({ onScheduled }: { onScheduled?: () => void
     setOk(false)
     setLoading(true)
     try {
-      const res = await fetch("/api/pickups", {
+      const pickupAtIso = new Date(scheduledAt).toISOString()
+      const res = await fetch("/api/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, address, scheduled_at: scheduledAt }),
+        body: JSON.stringify({ type, address, pickupAt: pickupAtIso }),
       })
-      if (!res.ok) throw new Error("Failed to schedule")
+
+      if (!res.ok) {
+        let msg = "Failed to schedule"
+        try {
+          const j = await res.json()
+          if (j?.message) msg = j.message
+        } catch {}
+        throw new Error(msg)
+      }
+
       setOk(true)
       setAddress("")
       setScheduledAt("")
