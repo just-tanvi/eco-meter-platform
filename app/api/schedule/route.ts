@@ -1,12 +1,3 @@
-// app/api/schedule/route.ts
-// Public scheduling endpoint (no auth). Attempts DB insert if Supabase is configured,
-// otherwise returns ok:true, stored:false so the UI doesn't fail.
-
-// and never hard-fail if Supabase/env/DB is unavailable.
-
-import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
-
 type SchedulePayload = {
   pickupAt?: string
   pickup_at?: string
@@ -34,8 +25,35 @@ function normalizeMaterials(input: SchedulePayload["materials"]): string[] {
   return []
 }
 
+// In-memory "DB" for mock scheduling
+const MEMORY_DB = {
+  pickups: [] as Array<{
+    id: string
+    created_at: string
+    pickup_at: string
+    address: string
+    type: string
+    materials: string[]
+    notes: string | null
+    status: "scheduled"
+  }>,
+}
+
+function uuid() {
+  // Prefer Web Crypto if available
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID()
+  }
+  // Fallback simple UUID
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export async function POST(req: Request) {
-  // Parse body: JSON first, fallback to FormData
+  // Parse body: try JSON, then FormData
   let raw: any = null
   try {
     raw = await req.json()
@@ -74,91 +92,21 @@ export async function POST(req: Request) {
   }
   const pickup_at = d.toISOString()
 
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anon = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  // If Supabase is not configured, don't fail the UX—pretend-succeed.
-  if (!url || !anon) {
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        stored: false,
-        hint: "Supabase not configured; submission accepted without storage.",
-      }),
-      { status: 200, headers: { "content-type": "application/json" } },
-    )
+  const record = {
+    id: uuid(),
+    created_at: new Date().toISOString(),
+    pickup_at,
+    address,
+    type,
+    materials,
+    notes,
+    status: "scheduled" as const,
   }
 
-  // Create server client (no auth required)
-  const cookieStore = cookies()
-  const supabase = createServerClient(url, anon, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value
-      },
-      set(name: string, value: string, options: any) {
-        cookieStore.set({ name, value, ...options })
-      },
-      remove(name: string, options: any) {
-        cookieStore.set({ name, value: "", ...options, maxAge: 0 })
-      },
-    },
+  MEMORY_DB.pickups.push(record)
+
+  return new Response(JSON.stringify({ ok: true, stored: true, id: record.id }), {
+    status: 201,
+    headers: { "content-type": "application/json" },
   })
-
-  try {
-    // Try to insert; some schemas may not include `type/materials/notes/status/user_id`.
-    // Insert minimal fields first; if your schema has more required fields, run the provided SQL.
-    const { data, error } = await supabase
-      .from("pickups")
-      .insert({
-        // user_id intentionally omitted (public submissions)
-        pickup_at,
-        address,
-        // Best-effort: include optional fields if your schema supports them
-        type,
-        materials,
-        notes,
-        status: "scheduled",
-      })
-      .select("id")
-      .single()
-
-    if (error) {
-      // Degrade gracefully: accept without storage and provide a hint
-      const msg = (error as any)?.message || "Database error"
-      const payload: Record<string, any> = {
-        ok: true,
-        stored: false,
-        hint: "Submission accepted but could not be stored. See 'details' for help.",
-        details: msg,
-      }
-      if (/relation .*pickups.* does not exist/i.test(msg)) {
-        payload.tag = "TABLE_MISSING"
-        payload.fix = "Run scripts/002_create_pickups.sql"
-      } else if (/row-level security/i.test(msg)) {
-        payload.tag = "RLS_BLOCKED"
-        payload.fix = "Adjust RLS to allow anonymous inserts or remove RLS requirement."
-      } else if (/null value in column .* violates not-null constraint/i.test(msg)) {
-        payload.tag = "NOT_NULL_VIOLATION"
-        payload.fix = "Ensure required columns have defaults or are provided."
-      }
-      return new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } })
-    }
-
-    return new Response(JSON.stringify({ ok: true, stored: true, id: data?.id }), {
-      status: 201,
-      headers: { "content-type": "application/json" },
-    })
-  } catch (e: any) {
-    // Unknown DB failure — still accept without storage
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        stored: false,
-        hint: "Submission accepted but storage failed unexpectedly.",
-        details: e?.message || "Unknown error",
-      }),
-      { status: 200, headers: { "content-type": "application/json" } },
-    )
-  }
 }
