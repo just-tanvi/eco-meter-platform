@@ -69,8 +69,8 @@ export default function HomePage() {
 
           <div className="rounded-lg border border-gray-200 p-4">
             <img
-              src="/recycling-bin-pickup-scene-person-collecting-bin-f.png"
-              alt="Recycling bin pickup: a collector takes a bin from a woman at her doorstep"
+              src="/cartoon-style-illustration-of-recycling-bin-pickup.png"
+              alt="Cartoon illustration of recycling bin pickup: a friendly collector takes a bin from a lady at her doorstep"
               className="h-auto w-full rounded"
             />
             <div className="mt-4 grid grid-cols-3 gap-3">
