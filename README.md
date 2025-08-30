@@ -1,6 +1,6 @@
 **ECO METER**
 
-*where change matters.*
+*where change counts.*
 
  A community that turns recyclable materials into measurable impact. Schedule pickups or drop-offs, 
  track your contributions, earn recognition, and climb global and friends leaderboards.
