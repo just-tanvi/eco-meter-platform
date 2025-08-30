@@ -26,8 +26,8 @@ Our aim with this project is to make recycling easy and convenient for our users
 *TEAM MEMBERS*
 
 - Tanvi Tiwari – Frontend, UI/UX.  
-- Ishita Gupta – UI/UX.
-- Awika Raj Panjiyara - Representaion.
+- Ishita Gupta – PPT presentaion, UI/UX.
+- Awika Raj Panjiyara - UI/UX PPT presentaion.
 
 *FUTURE IMPROVEMENTS:*
 
