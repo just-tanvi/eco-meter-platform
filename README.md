@@ -31,5 +31,7 @@ Our aim with this project is to make recycling easy and convenient for our users
 
 *FUTURE IMPROVEMENTS:*
 
+   - Abstract hard-coded values into variables/constants
    - An AI-powered scanner that identifies whether an item is recyclable or not.
    - Larger data bases using SQL.
+
